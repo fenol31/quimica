@@ -25,7 +25,7 @@ const BANCO_DE_QUESTOES = {
                     "Sabor azedo como limão",
                     "Cor azul em papel de tornassol"
                 ],
-                correta: 2 // Índice 2 = "Sabor azedo como limão"
+                correta: 2
             },
             {
                 pergunta: "O que os ácidos liberam quando dissolvidos em água?",
@@ -266,6 +266,8 @@ let estado = {
 // FUNÇÕES DE INICIALIZAÇÃO
 // =============================================
 function iniciarAplicacao() {
+    console.log('🚀 Iniciando aplicação...');
+    
     // Gerar código único para a sessão
     estado.aluno.codigoSessao = gerarCodigoSessao();
     estado.aluno.inicioSessao = new Date().toISOString();
@@ -292,6 +294,8 @@ function gerarCodigoSessao() {
 // GERENCIAMENTO DE TELAS
 // =============================================
 function mostrarTelaIdentificacao() {
+    console.log('📝 Mostrando tela de identificação...');
+    
     const app = document.getElementById('app');
     app.innerHTML = `
         <div class="tela ativa" id="tela-identificacao">
@@ -324,13 +328,84 @@ function mostrarTelaIdentificacao() {
         </div>
     `;
     
-    document.getElementById('btn-iniciar').addEventListener('click', processarIdentificacao);
+    // Adicionar evento ao botão
+    const btnIniciar = document.getElementById('btn-iniciar');
+    if (btnIniciar) {
+        btnIniciar.addEventListener('click', processarIdentificacao);
+        console.log('✅ Botão "Iniciar" configurado');
+    } else {
+        console.error('❌ Botão "Iniciar" não encontrado!');
+    }
+    
+    // Permitir enviar com Enter
+    const nomeInput = document.getElementById('nome');
+    const turmaInput = document.getElementById('turma');
+    
+    if (nomeInput && turmaInput) {
+        nomeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                turmaInput.focus();
+            }
+        });
+        
+        turmaInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                processarIdentificacao();
+            }
+        });
+    }
+}
+
+function processarIdentificacao() {
+    console.log('🔍 Processando identificação...');
+    
+    const nomeInput = document.getElementById('nome');
+    const turmaInput = document.getElementById('turma');
+    
+    if (!nomeInput || !turmaInput) {
+        console.error('❌ Campos de entrada não encontrados!');
+        mostrarToast('Erro: Campos não encontrados', 'erro');
+        return;
+    }
+    
+    const nome = nomeInput.value.trim();
+    const turma = turmaInput.value.trim();
+    
+    console.log('📋 Dados:', { nome, turma });
+    
+    if (!nome || !turma) {
+        mostrarToast('Por favor, preencha seu nome e turma!', 'aviso');
+        return;
+    }
+    
+    if (nome.length < 3) {
+        mostrarToast('Por favor, digite seu nome completo (mínimo 3 caracteres)', 'aviso');
+        return;
+    }
+    
+    estado.aluno.nome = nome;
+    estado.aluno.turma = turma;
+    
+    console.log('✅ Aluno registrado:', estado.aluno.nome);
+    
+    // Salvar progresso
+    salvarProgresso();
+    
+    // Iniciar primeira lição
+    estado.progresso.licaoAtual = estado.progresso.ordemLicoes[0];
+    mostrarTelaIntroducao(estado.progresso.licaoAtual);
 }
 
 function mostrarTelaIntroducao(licaoKey) {
-    const licao = BANCO_DE_QUESTOES[licaoKey];
-    const app = document.getElementById('app');
+    console.log('📚 Mostrando introdução da lição:', licaoKey);
     
+    const licao = BANCO_DE_QUESTOES[licaoKey];
+    if (!licao) {
+        console.error('❌ Lição não encontrada:', licaoKey);
+        return;
+    }
+    
+    const app = document.getElementById('app');
     app.innerHTML = `
         <div class="tela ativa" id="tela-introducao">
             <div class="topo">
@@ -351,159 +426,39 @@ function mostrarTelaIntroducao(licaoKey) {
                 
                 <div class="dica-licao">
                     <i class="fas fa-lightbulb"></i>
-                    <strong>Dica:</strong> Leia com atenção! Você terá ${CONFIG.QUESTÕES_POR_LIÇÃO} questões sobre este tema.
+                    <div>
+                        <strong>Dica:</strong> Leia com atenção! Você terá ${CONFIG.QUESTÕES_POR_LIÇÃO} questões sobre este tema.
+                    </div>
                 </div>
                 
                 <button id="btn-comecar-questoes" class="btn">
                     <i class="fas fa-question-circle"></i> Vamos às Questões!
                 </button>
                 
-                <button onclick="mostrarTelaIdentificacao()" class="btn-voltar">
+                <button onclick="voltarParaIdentificacao()" class="btn-voltar">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
             </div>
         </div>
     `;
     
-    document.getElementById('btn-comecar-questoes').addEventListener('click', () => {
-        prepararQuestoes(licaoKey);
-        mostrarTelaQuestao();
-    });
-}
-
-function mostrarTelaQuestao() {
-    const questaoAtual = estado.progresso.questoesEmbaralhadas[estado.progresso.questaoAtual];
-    const totalQuestoes = estado.progresso.questoesEmbaralhadas.length;
-    const progressoPercent = ((estado.progresso.questaoAtual) / totalQuestoes) * 100;
-    
-    const app = document.getElementById('app');
-    app.innerHTML = `
-        <div class="tela ativa" id="tela-questao">
-            <div class="topo">
-                <span id="contador-questao">
-                    Questão ${estado.progresso.questaoAtual + 1}/${totalQuestoes}
-                    <small>${estado.progresso.licaoAtual.toUpperCase()}</small>
-                </span>
-                <div class="progresso-container">
-                    <div class="progresso-bar" id="progresso-questao" style="width: ${progressoPercent}%"></div>
-                </div>
-            </div>
-            
-            <div class="questao-container">
-                <h3 id="texto-questao">${questaoAtual.pergunta}</h3>
-                
-                <div id="opcoes-container" class="opcoes-container">
-                    <!-- Opções serão inseridas por JavaScript -->
-                </div>
-                
-                <div class="controles">
-                    <button id="btn-proxima" class="btn btn-proxima" disabled>
-                        <i class="fas fa-arrow-right"></i> Próxima Questão
-                    </button>
-                    
-                    <button onclick="mostrarTelaIntroducao('${estado.progresso.licaoAtual}')" class="btn-voltar">
-                        <i class="fas fa-book"></i> Revisar Conteúdo
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    renderizarOpcoes(questaoAtual.opcoes);
-    document.getElementById('btn-proxima').addEventListener('click', processarProximaQuestao);
-}
-
-function mostrarTelaConclusao() {
-    const nota = calcularNota();
-    const app = document.getElementById('app');
-    
-    // Salvar resultado
-    salvarResultadoLocal(nota);
-    
-    app.innerHTML = `
-        <div class="tela ativa" id="tela-conclusao">
-            <div class="conclusao-container">
-                <div class="conclusao-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <h2>🎉 Missão Cumprida!</h2>
-                
-                <div class="nota-final">
-                    <div class="nota-circulo">
-                        <span class="nota-valor">${nota.toFixed(1)}</span>
-                        <span class="nota-max">/10</span>
-                    </div>
-                    <p class="nota-mensagem">${obterMensagemNota(nota)}</p>
-                </div>
-                
-                <div class="estatisticas">
-                    <div class="estatistica">
-                        <i class="fas fa-check-circle"></i>
-                        <span>${obterAcertos()} de ${estado.progresso.respostas.length} acertos</span>
-                    </div>
-                    <div class="estatistica">
-                        <i class="fas fa-clock"></i>
-                        <span>Tempo: ${calcularTempoGasto()}</span>
-                    </div>
-                </div>
-                
-                <div class="acoes-conclusao">
-                    <button onclick="reiniciarAtividade()" class="btn">
-                        <i class="fas fa-redo"></i> Fazer Novamente
-                    </button>
-                    
-                    <button onclick="exportarResultados()" class="btn btn-secundario">
-                        <i class="fas fa-download"></i> Exportar Resultados
-                    </button>
-                    
-                    <button onclick="mostrarPainelProfessor()" class="btn btn-terciario">
-                        <i class="fas fa-chalkboard-teacher"></i> Painel do Professor
-                    </button>
-                </div>
-                
-                <div class="info-exportacao">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Seu resultado foi salvo localmente</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// =============================================
-// FUNÇÕES DE LÓGICA
-// =============================================
-function processarIdentificacao() {
-    const nomeInput = document.getElementById('nome');
-    const turmaInput = document.getElementById('turma');
-    
-    if (!nomeInput || !turmaInput) return;
-    
-    const nome = nomeInput.value.trim();
-    const turma = turmaInput.value.trim();
-    
-    if (!nome || !turma) {
-        alert('Por favor, preencha seu nome e turma!');
-        return;
+    const btnComecarQuestoes = document.getElementById('btn-comecar-questoes');
+    if (btnComecarQuestoes) {
+        btnComecarQuestoes.addEventListener('click', () => {
+            console.log('🎯 Iniciando questões da lição:', licaoKey);
+            prepararQuestoes(licaoKey);
+            mostrarTelaQuestao();
+        });
     }
-    
-    if (nome.length < 3) {
-        alert('Por favor, digite seu nome completo (mínimo 3 caracteres)');
-        return;
-    }
-    
-    estado.aluno.nome = nome;
-    estado.aluno.turma = turma;
-    
-    // Salvar progresso
-    salvarProgresso();
-    
-    // Iniciar primeira lição
-    estado.progresso.licaoAtual = estado.progresso.ordemLicoes[0];
-    mostrarTelaIntroducao(estado.progresso.licaoAtual);
+}
+
+function voltarParaIdentificacao() {
+    mostrarTelaIdentificacao();
 }
 
 function prepararQuestoes(licaoKey) {
+    console.log('🔄 Preparando questões para:', licaoKey);
+    
     const licao = BANCO_DE_QUESTOES[licaoKey];
     
     // Embaralhar questões
@@ -532,10 +487,74 @@ function prepararQuestoes(licaoKey) {
     // Reiniciar contadores
     estado.progresso.questaoAtual = 0;
     estado.progresso.respostas = [];
+    
+    console.log(`✅ ${estado.progresso.questoesEmbaralhadas.length} questões preparadas`);
+}
+
+function mostrarTelaQuestao() {
+    console.log('❓ Mostrando questão:', estado.progresso.questaoAtual + 1);
+    
+    const questaoAtual = estado.progresso.questoesEmbaralhadas[estado.progresso.questaoAtual];
+    if (!questaoAtual) {
+        console.error('❌ Questão não encontrada!');
+        return;
+    }
+    
+    const totalQuestoes = estado.progresso.questoesEmbaralhadas.length;
+    const progressoPercent = ((estado.progresso.questaoAtual) / totalQuestoes) * 100;
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div class="tela ativa" id="tela-questao">
+            <div class="topo">
+                <span id="contador-questao">
+                    Questão ${estado.progresso.questaoAtual + 1}/${totalQuestoes}
+                    <small>${estado.progresso.licaoAtual.toUpperCase()}</small>
+                </span>
+                <div class="progresso-container">
+                    <div class="progresso-bar" id="progresso-questao" style="width: ${progressoPercent}%"></div>
+                </div>
+            </div>
+            
+            <div class="questao-container">
+                <h3 id="texto-questao">${questaoAtual.pergunta}</h3>
+                
+                <div id="opcoes-container" class="opcoes-container">
+                    <!-- Opções serão inseridas por JavaScript -->
+                </div>
+                
+                <div class="controles">
+                    <button id="btn-proxima" class="btn btn-proxima" disabled>
+                        <i class="fas fa-arrow-right"></i> Próxima Questão
+                    </button>
+                    
+                    <button onclick="voltarParaIntroducao()" class="btn-voltar">
+                        <i class="fas fa-book"></i> Revisar Conteúdo
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    renderizarOpcoes(questaoAtual.opcoes);
+    
+    const btnProxima = document.getElementById('btn-proxima');
+    if (btnProxima) {
+        btnProxima.addEventListener('click', processarProximaQuestao);
+    }
+}
+
+function voltarParaIntroducao() {
+    mostrarTelaIntroducao(estado.progresso.licaoAtual);
 }
 
 function renderizarOpcoes(opcoes) {
     const container = document.getElementById('opcoes-container');
+    if (!container) {
+        console.error('❌ Container de opções não encontrado!');
+        return;
+    }
+    
     container.innerHTML = '';
     
     opcoes.forEach((opcao, index) => {
@@ -553,9 +572,13 @@ function renderizarOpcoes(opcoes) {
         opcaoElement.addEventListener('click', () => selecionarOpcao(index));
         container.appendChild(opcaoElement);
     });
+    
+    console.log(`✅ ${opcoes.length} opções renderizadas`);
 }
 
 function selecionarOpcao(indiceSelecionado) {
+    console.log('🎯 Opção selecionada:', indiceSelecionado);
+    
     // Remover seleção anterior
     document.querySelectorAll('.opcao').forEach(op => {
         op.classList.remove('selecionada');
@@ -568,7 +591,10 @@ function selecionarOpcao(indiceSelecionado) {
     }
     
     // Habilitar botão próxima
-    document.getElementById('btn-proxima').disabled = false;
+    const btnProxima = document.getElementById('btn-proxima');
+    if (btnProxima) {
+        btnProxima.disabled = false;
+    }
     
     // Armazenar resposta
     const questaoAtual = estado.progresso.questoesEmbaralhadas[estado.progresso.questaoAtual];
@@ -584,6 +610,8 @@ function selecionarOpcao(indiceSelecionado) {
 }
 
 function processarProximaQuestao() {
+    console.log('➡️ Processando próxima questão...');
+    
     const totalQuestoes = estado.progresso.questoesEmbaralhadas.length;
     
     if (estado.progresso.questaoAtual < totalQuestoes - 1) {
@@ -592,6 +620,7 @@ function processarProximaQuestao() {
     } else {
         // Lição concluída
         estado.progresso.licoesCompletadas++;
+        console.log(`✅ Lição ${estado.progresso.licoesCompletadas}/${CONFIG.TOTAL_LICOES} concluída`);
         
         if (estado.progresso.licoesCompletadas < estado.progresso.ordemLicoes.length) {
             // Próxima lição
@@ -600,6 +629,7 @@ function processarProximaQuestao() {
             mostrarTelaIntroducao(proximaLicao);
         } else {
             // Todas as lições concluídas
+            console.log('🎉 Todas as lições concluídas!');
             concluirAtividade();
         }
     }
@@ -628,6 +658,77 @@ function obterAcertos() {
     return estado.progresso.respostas.filter(r => r.acertou).length;
 }
 
+// =============================================
+// TELA DE CONCLUSÃO
+// =============================================
+function mostrarTelaConclusao() {
+    const nota = calcularNota();
+    const acertos = obterAcertos();
+    const totalQuestoes = estado.progresso.respostas.length;
+    
+    console.log(`📊 Resultado final: ${nota.toFixed(1)}/10 (${acertos}/${totalQuestoes} acertos)`);
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div class="tela ativa" id="tela-conclusao">
+            <div class="conclusao-container">
+                <div class="conclusao-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2>🎉 Missão Cumprida!</h2>
+                
+                <div class="nota-final">
+                    <div class="nota-circulo">
+                        <span class="nota-valor">${nota.toFixed(1)}</span>
+                        <span class="nota-max">/10</span>
+                    </div>
+                    <p class="nota-mensagem">${obterMensagemNota(nota)}</p>
+                </div>
+                
+                <div class="estatisticas">
+                    <div class="estatistica">
+                        <i class="fas fa-check-circle"></i>
+                        <span>${acertos} de ${totalQuestoes} acertos</span>
+                    </div>
+                    <div class="estatistica">
+                        <i class="fas fa-clock"></i>
+                        <span>Tempo: ${calcularTempoGasto()}</span>
+                    </div>
+                </div>
+                
+                <div class="acoes-conclusao">
+                    <button onclick="reiniciarAtividade()" class="btn">
+                        <i class="fas fa-redo"></i> Fazer Novamente
+                    </button>
+                    
+                    <button onclick="exportarResultados()" class="btn btn-secundario">
+                        <i class="fas fa-download"></i> Exportar Resultados
+                    </button>
+                    
+                    <button onclick="mostrarPainelProfessor()" class="btn btn-terciario">
+                        <i class="fas fa-chalkboard-teacher"></i> Painel do Professor
+                    </button>
+                </div>
+                
+                <div class="info-exportacao">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Seu resultado foi salvo localmente</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Salvar resultado
+    salvarResultadoLocal(nota, acertos, totalQuestoes);
+}
+
+function obterMensagemNota(nota) {
+    if (nota >= 9) return "Excelente! Você dominou as funções inorgânicas! 🎯";
+    if (nota >= 7) return "Muito bom! Você entendeu bem os conceitos! 👍";
+    if (nota >= 5) return "Bom trabalho! Continue estudando! 📚";
+    return "Que tal revisar o conteúdo e tentar novamente? 💪";
+}
+
 function calcularTempoGasto() {
     if (!estado.aluno.inicioSessao || !estado.aluno.fimSessao) return "0 min";
     
@@ -637,13 +738,6 @@ function calcularTempoGasto() {
     const diffMins = Math.floor(diffMs / 60000);
     
     return diffMins < 1 ? "Menos de 1 minuto" : `${diffMins} minutos`;
-}
-
-function obterMensagemNota(nota) {
-    if (nota >= 9) return "Excelente! Você dominou as funções inorgânicas! 🎯";
-    if (nota >= 7) return "Muito bom! Você entendeu bem os conceitos! 👍";
-    if (nota >= 5) return "Bom trabalho! Continue estudando! 📚";
-    return "Que tal revisar o conteúdo e tentar novamente? 💪";
 }
 
 // =============================================
@@ -658,6 +752,7 @@ function salvarProgresso() {
     
     try {
         localStorage.setItem('quimicaDuolingo_progresso', JSON.stringify(dados));
+        console.log('💾 Progresso salvo');
     } catch (e) {
         console.warn('Não foi possível salvar o progresso:', e);
     }
@@ -672,6 +767,7 @@ function carregarProgresso() {
             // Carregar dados do aluno se existirem
             if (dados.aluno && dados.aluno.nome) {
                 estado.aluno = { ...estado.aluno, ...dados.aluno };
+                console.log('📂 Progresso carregado para:', estado.aluno.nome);
             }
             
             // Carregar progresso se a sessão for recente (últimas 24h)
@@ -682,6 +778,7 @@ function carregarProgresso() {
                 
                 if (diffHoras < 24) { // Menos de 24 horas
                     estado.progresso = dados.progresso;
+                    console.log('🔄 Progresso restaurado');
                 }
             }
         }
@@ -690,13 +787,13 @@ function carregarProgresso() {
     }
 }
 
-function salvarResultadoLocal(nota) {
+function salvarResultadoLocal(nota, acertos, totalQuestoes) {
     const resultado = {
         id: Date.now(),
         aluno: estado.aluno,
         nota: nota,
-        acertos: obterAcertos(),
-        totalQuestoes: estado.progresso.respostas.length,
+        acertos: acertos,
+        totalQuestoes: totalQuestoes,
         data: new Date().toLocaleString('pt-BR'),
         timestamp: new Date().toISOString()
     };
@@ -717,163 +814,6 @@ function salvarResultadoLocal(nota) {
         console.log('✅ Resultado salvo localmente');
     } catch (e) {
         console.error('Erro ao salvar resultado:', e);
-    }
-}
-
-// =============================================
-// FUNÇÕES DE EXPORTAÇÃO
-// =============================================
-function exportarResultados() {
-    try {
-        const resultados = JSON.parse(localStorage.getItem('quimicaDuolingo_resultados') || '[]');
-        
-        if (resultados.length === 0) {
-            alert('Nenhum resultado disponível para exportar.');
-            return;
-        }
-        
-        // Criar CSV
-        let csv = 'Nome,Turma,Nota,Acertos/Total,Data,Hora,Sessão\n';
-        
-        resultados.forEach(r => {
-            const [data, hora] = r.data.split(' ');
-            csv += `"${r.aluno.nome}","${r.aluno.turma}",${r.nota.toFixed(1)},${r.acertos}/${r.totalQuestoes},${data},${hora},${r.aluno.codigoSessao}\n`;
-        });
-        
-        // Criar arquivo
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        
-        link.href = url;
-        link.setAttribute('download', `notas_quimica_${new Date().toISOString().slice(0, 10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        alert(`✅ ${resultados.length} resultados exportados para CSV!`);
-    } catch (e) {
-        console.error('Erro ao exportar:', e);
-        alert('Erro ao exportar resultados.');
-    }
-}
-
-function mostrarPainelProfessor() {
-    try {
-        const resultados = JSON.parse(localStorage.getItem('quimicaDuolingo_resultados') || '[]');
-        
-        if (resultados.length === 0) {
-            alert('Nenhum resultado registrado ainda.');
-            return;
-        }
-        
-        // Calcular estatísticas
-        const totalAlunos = resultados.length;
-        const media = resultados.reduce((sum, r) => sum + r.nota, 0) / totalAlunos;
-        const aprovados = resultados.filter(r => r.nota >= 6).length;
-        const melhorNota = Math.max(...resultados.map(r => r.nota));
-        const piorNota = Math.min(...resultados.map(r => r.nota));
-        
-        // Criar HTML do painel
-        const app = document.getElementById('app');
-        app.innerHTML = `
-            <div class="tela ativa" id="painel-professor">
-                <div class="painel-header">
-                    <h1><i class="fas fa-chalkboard-teacher"></i> Painel do Professor</h1>
-                    <p>Química Duolingo - Resultados da Turma</p>
-                </div>
-                
-                <div class="estatisticas-gerais">
-                    <div class="estat-card">
-                        <h3>${totalAlunos}</h3>
-                        <p>Total de Alunos</p>
-                    </div>
-                    <div class="estat-card">
-                        <h3>${media.toFixed(1)}</h3>
-                        <p>Média da Turma</p>
-                    </div>
-                    <div class="estat-card">
-                        <h3>${aprovados}</h3>
-                        <p>Aprovados (≥6.0)</p>
-                    </div>
-                    <div class="estat-card">
-                        <h3>${melhorNota.toFixed(1)}</h3>
-                        <p>Melhor Nota</p>
-                    </div>
-                </div>
-                
-                <div class="tabela-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nome</th>
-                                <th>Turma</th>
-                                <th>Nota</th>
-                                <th>Acertos</th>
-                                <th>Situação</th>
-                                <th>Data</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${resultados.map((r, i) => `
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td><strong>${r.aluno.nome}</strong></td>
-                                    <td>${r.aluno.turma}</td>
-                                    <td class="nota-${r.nota >= 8 ? 'alta' : r.nota >= 6 ? 'media' : 'baixa'}">
-                                        ${r.nota.toFixed(1)}
-                                    </td>
-                                    <td>${r.acertos}/${r.totalQuestoes}</td>
-                                    <td>
-                                        ${r.nota >= 8 ? 
-                                            '<span class="badge aprovado">Excelente</span>' : 
-                                          r.nota >= 6 ? 
-                                            '<span class="badge exame">Aprovado</span>' : 
-                                            '<span class="badge reprovado">Reprovado</span>'
-                                        }
-                                    </td>
-                                    <td>${r.data}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="painel-acoes">
-                    <button onclick="exportarResultados()" class="btn">
-                        <i class="fas fa-file-export"></i> Exportar CSV
-                    </button>
-                    <button onclick="limparResultados()" class="btn btn-perigo">
-                        <i class="fas fa-trash"></i> Limpar Todos os Dados
-                    </button>
-                    <button onclick="mostrarTelaConclusao()" class="btn">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </button>
-                </div>
-                
-                <div class="painel-info">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Os dados são salvos apenas neste navegador</span>
-                </div>
-            </div>
-        `;
-    } catch (e) {
-        console.error('Erro ao mostrar painel:', e);
-        alert('Erro ao carregar painel do professor.');
-    }
-}
-
-function limparResultados() {
-    if (confirm('⚠️ ATENÇÃO: Isso apagará TODOS os resultados permanentemente!\n\nTem certeza que deseja continuar?')) {
-        try {
-            localStorage.removeItem('quimicaDuolingo_resultados');
-            localStorage.removeItem('quimicaDuolingo_progresso');
-            alert('✅ Todos os dados foram apagados com sucesso!');
-            iniciarAplicacao();
-        } catch (e) {
-            alert('Erro ao apagar dados.');
-        }
     }
 }
 
@@ -922,39 +862,41 @@ function reiniciarAtividade() {
 // INICIALIZAÇÃO
 // =============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar CSS inline se necessário
-    if (!document.querySelector('style')) {
-        const style = document.createElement('style');
-        style.textContent = `
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; }
-            .tela { display: none; }
-            .tela.ativa { display: block; }
-            .btn { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-            .btn:hover { background: #45a049; }
-        `;
-        document.head.appendChild(style);
+    console.log('📄 DOM carregado, iniciando aplicação...');
+    
+    // Remover tela de carregamento
+    const app = document.getElementById('app');
+    if (app) {
+        app.innerHTML = '';
     }
     
     // Iniciar aplicação
     iniciarAplicacao();
+    
+    // Configurar função global de toast
+    window.mostrarToast = mostrarToast;
 });
 
 // =============================================
-// FUNÇÕES GLOBAIS (para acesso via HTML)
+// FUNÇÃO TOAST (simplificada)
 // =============================================
-window.reiniciarAtividade = reiniciarAtividade;
-window.exportarResultados = exportarResultados;
-window.mostrarPainelProfessor = mostrarPainelProfessor;
-window.limparResultados = limparResultados;
-window.mostrarTelaIdentificacao = mostrarTelaIdentificacao;
-window.mostrarTelaIntroducao = mostrarTelaIntroducao;
-window.mostrarTelaConclusao = mostrarTelaConclusao;
-
-// Exportar estado para debug (opcional)
-if (typeof window !== 'undefined') {
-    window.estadoQuimica = estado;
-    window.BANCO_DE_QUESTOES = BANCO_DE_QUESTOES;
+function mostrarToast(mensagem, tipo = 'info') {
+    console.log(`📢 Toast [${tipo}]:`, mensagem);
+    
+    // Mostrar alerta simples se o toast não existir
+    if (tipo === 'erro' || tipo === 'aviso') {
+        alert(mensagem);
+    }
 }
 
-console.log('📚 Script.js carregado com sucesso!');
-console.log('🧪 Banco de questões:', Object.keys(BANCO_DE_QUESTOES).length, 'lições');
+// =============================================
+// FUNÇÕES GLOBAIS
+// =============================================
+// Tornar funções disponíveis globalmente
+window.voltarParaIdentificacao = voltarParaIdentificacao;
+window.voltarParaIntroducao = voltarParaIntroducao;
+window.reiniciarAtividade = reiniciarAtividade;
+window.mostrarToast = mostrarToast;
+
+// Para debugging
+console.log('🧪 Script.js carregado com sucesso!');
