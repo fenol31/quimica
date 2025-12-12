@@ -4,110 +4,196 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Química Duolingo - Funções Inorgânicas</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="Aprenda Química de forma divertida! Atividade gamificada sobre Ácidos, Bases, Sais e Óxidos.">
+    <meta name="author" content="Professor de Química">
+    
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧪</text></svg>">
+    
+    <style>
+        /* CSS de fallback enquanto style.css carrega */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .app {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .carregando {
+            padding: 60px;
+            text-align: center;
+        }
+        
+        .carregando i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Tela 1: Identificação -->
-        <div id="tela-identificacao" class="tela ativa">
-            <div class="logo">
-                <i class="fas fa-flask"></i>
-                <h1>Química Duolingo</h1>
-            </div>
-            <p class="subtitulo">Aprenda Funções Inorgânicas de forma divertida!</p>
-            
-            <div class="form-container">
-                <div class="form-group">
-                    <label for="nome"><i class="fas fa-user"></i> Nome Completo</label>
-                    <input type="text" id="nome" placeholder="Digite seu nome completo" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="turma"><i class="fas fa-users"></i> Turma</label>
-                    <input type="text" id="turma" placeholder="Ex: 1ºA, 2ºB, etc." required>
-                </div>
-                
-                <button id="btn-iniciar" class="btn">
-                    <i class="fas fa-play"></i> Começar Aventura Química
-                </button>
-            </div>
+    <!-- Container principal da aplicação -->
+    <div class="app" id="app">
+        <!-- Tela de carregamento inicial -->
+        <div class="carregando">
+            <i class="fas fa-atom"></i>
+            <h2>Carregando Química Duolingo...</h2>
+            <p>Preparando uma experiência incrível de aprendizado!</p>
         </div>
-
-        <!-- Tela 2: Introdução da Lição -->
-        <div id="tela-introducao" class="tela">
-            <div class="topo">
-                <span id="indicador-licao">Lições: 1/4</span>
-                <div class="progresso-container">
-                    <div class="progresso-bar" id="progresso-bar"></div>
-                </div>
+        
+        <!-- 
+            Todas as telas serão carregadas dinamicamente pelo JavaScript
+            no elemento #app. As telas são:
+            1. Identificação (nome e turma)
+            2. Introdução das lições
+            3. Questões
+            4. Conclusão com nota
+            5. Painel do professor
+        -->
+    </div>
+    
+    <!-- Modal genérico para alertas -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-titulo">Título</h3>
+                <button class="modal-fechar" onclick="fecharModal()">&times;</button>
             </div>
-            
-            <div class="conteudo-licao">
-                <div id="icone-topico" class="icone-topico">
-                    <i class="fas fa-lemon"></i>
-                </div>
-                <h2 id="titulo-topico">Ácidos</h2>
-                <div id="texto-explicativo" class="texto-explicativo">
-                    Carregando conteúdo...
-                </div>
-                
-                <button id="btn-comecar-questoes" class="btn">
-                    <i class="fas fa-question-circle"></i> Vamos às Questões!
-                </button>
+            <div class="modal-conteudo" id="modal-conteudo">
+                Conteúdo do modal
             </div>
-        </div>
-
-        <!-- Tela 3: Questões -->
-        <div id="tela-questao" class="tela">
-            <div class="topo">
-                <span id="contador-questao">Questão 1/5</span>
-                <div class="progresso-container">
-                    <div class="progresso-bar" id="progresso-questao"></div>
-                </div>
-            </div>
-            
-            <div class="questao-container">
-                <h3 id="texto-questao">Carregando questão...</h3>
-                
-                <div id="opcoes-container" class="opcoes-container">
-                    <!-- Opções serão inseridas via JavaScript -->
-                </div>
-                
-                <div class="controles">
-                    <button id="btn-proxima" class="btn btn-proxima" disabled>
-                        <i class="fas fa-arrow-right"></i> Próxima
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tela 4: Conclusão -->
-        <div id="tela-conclusao" class="tela">
-            <div class="conclusao-container">
-                <div class="conclusao-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <h2>Missão Cumprida!</h2>
-                <p class="mensagem-conclusao">
-                    Parabéns! Você completou todas as lições sobre Funções Inorgânicas.
-                </p>
-                <p class="mensagem-dica">
-                    Continue explorando o mundo fascinante da Química!
-                </p>
-                
-                <div class="info-envio">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>Seu progresso foi registrado com sucesso!</span>
-                </div>
-                
-                <button id="btn-novamente" class="btn btn-secundario">
-                    <i class="fas fa-redo"></i> Fazer Novamente
-                </button>
+            <div class="modal-acoes">
+                <button class="btn" onclick="fecharModal()">OK</button>
             </div>
         </div>
     </div>
-
+    
+    <!-- Toast/Notificação -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- JavaScript Principal -->
     <script src="script.js"></script>
+    
+    <!-- Scripts auxiliares -->
+    <script>
+        // Funções auxiliares globais
+        function mostrarModal(titulo, conteudo) {
+            document.getElementById('modal-titulo').textContent = titulo;
+            document.getElementById('modal-conteudo').innerHTML = conteudo;
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+        
+        function fecharModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+        
+        function mostrarToast(mensagem, tipo = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${tipo}`;
+            toast.innerHTML = `
+                <i class="fas fa-${tipo === 'sucesso' ? 'check-circle' : tipo === 'erro' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${mensagem}</span>
+                <button class="toast-fechar" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            toastContainer.appendChild(toast);
+            
+            // Remover automaticamente após 5 segundos
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+        
+        // Fechar modal ao clicar fora
+        document.getElementById('modal-overlay')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+        
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModal();
+            }
+        });
+        
+        // Detectar se está offline
+        window.addEventListener('offline', function() {
+            mostrarToast('Você está offline. Suas respostas serão salvas localmente.', 'aviso');
+        });
+        
+        window.addEventListener('online', function() {
+            mostrarToast('Conexão restaurada!', 'sucesso');
+        });
+        
+        // Prevenir F5 durante a atividade
+        let atividadeIniciada = false;
+        
+        // Adicionar à mensagem de saída
+        window.addEventListener('beforeunload', function(e) {
+            if (atividadeIniciada) {
+                e.preventDefault();
+                e.returnValue = 'Tem certeza que deseja sair? Seu progresso será salvo, mas a atividade será interrompida.';
+            }
+        });
+        
+        // Expor função para o script principal
+        window.setAtividadeIniciada = function(iniciada) {
+            atividadeIniciada = iniciada;
+        };
+    </script>
+    
+    <!-- Google Analytics opcional (remova se não quiser) -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-XXXXX-Y"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-XXXXX-Y');
+    </script>
+    -->
+    
+    <!-- PWA Manifest (opcional) -->
+    <!--
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+    -->
 </body>
 </html>
