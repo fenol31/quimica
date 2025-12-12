@@ -867,3 +867,94 @@ function mostrarPainelProfessor() {
 function limparResultados() {
     if (confirm('⚠️ ATENÇÃO: Isso apagará TODOS os resultados permanentemente!\n\nTem certeza que deseja continuar?')) {
         try {
+            localStorage.removeItem('quimicaDuolingo_resultados');
+            localStorage.removeItem('quimicaDuolingo_progresso');
+            alert('✅ Todos os dados foram apagados com sucesso!');
+            iniciarAplicacao();
+        } catch (e) {
+            alert('Erro ao apagar dados.');
+        }
+    }
+}
+
+// =============================================
+// FUNÇÕES AUXILIARES
+// =============================================
+function embaralharArray(array) {
+    const novoArray = [...array];
+    for (let i = novoArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [novoArray[i], novoArray[j]] = [novoArray[j], novoArray[i]];
+    }
+    return novoArray;
+}
+
+function reiniciarAtividade() {
+    // Manter apenas informações do aluno
+    const alunoInfo = {
+        nome: estado.aluno.nome,
+        turma: estado.aluno.turma,
+        codigoSessao: gerarCodigoSessao(),
+        inicioSessao: new Date().toISOString()
+    };
+    
+    // Resetar estado
+    estado = {
+        aluno: alunoInfo,
+        progresso: {
+            licaoAtual: 'acidos',
+            questaoAtual: 0,
+            licoesCompletadas: 0,
+            questoesEmbaralhadas: [],
+            respostas: [],
+            ordemLicoes: ['acidos', 'bases', 'sais', 'oxidos']
+        }
+    };
+    
+    // Limpar progresso salvo
+    localStorage.removeItem('quimicaDuolingo_progresso');
+    
+    // Reiniciar
+    mostrarTelaIdentificacao();
+}
+
+// =============================================
+// INICIALIZAÇÃO
+// =============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar CSS inline se necessário
+    if (!document.querySelector('style')) {
+        const style = document.createElement('style');
+        style.textContent = `
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; }
+            .tela { display: none; }
+            .tela.ativa { display: block; }
+            .btn { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+            .btn:hover { background: #45a049; }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Iniciar aplicação
+    iniciarAplicacao();
+});
+
+// =============================================
+// FUNÇÕES GLOBAIS (para acesso via HTML)
+// =============================================
+window.reiniciarAtividade = reiniciarAtividade;
+window.exportarResultados = exportarResultados;
+window.mostrarPainelProfessor = mostrarPainelProfessor;
+window.limparResultados = limparResultados;
+window.mostrarTelaIdentificacao = mostrarTelaIdentificacao;
+window.mostrarTelaIntroducao = mostrarTelaIntroducao;
+window.mostrarTelaConclusao = mostrarTelaConclusao;
+
+// Exportar estado para debug (opcional)
+if (typeof window !== 'undefined') {
+    window.estadoQuimica = estado;
+    window.BANCO_DE_QUESTOES = BANCO_DE_QUESTOES;
+}
+
+console.log('📚 Script.js carregado com sucesso!');
+console.log('🧪 Banco de questões:', Object.keys(BANCO_DE_QUESTOES).length, 'lições');
