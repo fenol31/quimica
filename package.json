@@ -1,0 +1,8 @@
+{
+  "name": "quimica",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx json-server --watch db.json --port 3000",
+    "dev": "npx serve ."
+  }
+}
